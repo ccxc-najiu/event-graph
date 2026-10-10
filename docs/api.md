@@ -68,6 +68,8 @@ graph.consumers(result_id)    # 此结果的所有出边
 
 一次更新前获取的只读映射仍指向当时的定义快照；要获取最新状态，应再次访问属性。
 
+更新还会检查必需触发依赖及严格分离窗口产生的时间先后约束；出现自依赖、间接环或时间冲突时抛出 `ValidationError`，不提交更新。`related` 不产生固定顺序，双向相关项合法。
+
 运行接口：
 
 ```python
@@ -137,3 +139,21 @@ history.experiences(id)   # 此人物参与过的 Execution 元组
 | `MissingFlowUpdate` | 输入/输出接口改变但未明确更新流程；继承 ValidationError |
 | `NotEnabled` | 时间、地点或触发条件不满足 |
 | `UndefinedInput` | 实际相关项组合不在流程覆盖域中 |
+
+## JSON 与三维布局
+
+以下接口也可从 `eventgraph` 直接导入：
+
+```python
+loads_graph(text: str) -> EventGraph
+graph_from_dict(data: dict) -> EventGraph
+dumps_graph(graph: EventGraph) -> str
+graph_to_dict(graph: EventGraph) -> dict
+analyze_graph(graph: EventGraph) -> Relations
+layout_graph(graph, *, node_spacing=3.0, layer_spacing=5.0,
+             sweeps=6, previous=None) -> Layout
+```
+
+`Relations` 提供只读 `ranks` 与完整业务 `links`。`Layout.positions` 是事件 ID 到 `Position(x, y, z, rank)` 的只读映射，`Layout.to_dict()` 返回几何快照。`UnconfiguredFlow` 用于没有执行规则的可编辑定义，执行时抛出 `UndefinedInput`。
+
+格式、约束、布局参数、稳定更新和导出边界见 [JSON 解析与三维布局](json-layout.md)。

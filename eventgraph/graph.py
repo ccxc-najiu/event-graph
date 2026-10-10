@@ -11,6 +11,7 @@ from .models import (
     Connection, Event, EventSchema, Execution, History, InputKind,
     Result, ResultRecord, check_id, check_time,
 )
+from .ordering import rank_events
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class EventGraph:
         self._connections: tuple[Connection, ...] = ()
         self._incoming: dict[str, tuple[Connection, ...]] = {}
         self._outgoing: dict[str, tuple[Connection, ...]] = {}
+        self._schemas: dict[str, EventSchema] = {}
         self._retired_results: set[str] = set()
         self._revision = 0
 
@@ -55,7 +57,9 @@ class EventGraph:
         return self._revision
 
     def schema(self, event_id: str) -> EventSchema:
-        return self._schema(event_id, self._events, self._results, self._connections)
+        if event_id not in self._schemas:
+            raise ValidationError(f"unknown event: {event_id}")
+        return self._schemas[event_id]
 
     def consumers(self, result_id: str) -> tuple[Connection, ...]:
         if result_id not in self._results:
@@ -113,33 +117,18 @@ class EventGraph:
             dict(flow_updates or {}), removed=frozenset({old_result}),
         )
 
-    @staticmethod
-    def _schema(event_id, events, results, connections) -> EventSchema:
-        if event_id not in events:
-            raise ValidationError(f"unknown event: {event_id}")
-        return EventSchema(
-            event=events[event_id],
-            trigger_conditions=frozenset(
-                c.source_result for c in connections
-                if c.target_event == event_id and c.kind is InputKind.TRIGGER
-            ),
-            related_items=frozenset(
-                c.source_result for c in connections
-                if c.target_event == event_id and c.kind is InputKind.RELATED
-            ),
-            outputs=frozenset(r.id for r in results.values() if r.event_id == event_id),
-        )
-
     def _commit(self, events, results, connections, updates, *, removed) -> MutationReport:
         if not set(updates) <= set(events):
             raise ValidationError(f"flow update references unknown events: {set(updates) - set(events)}")
         for event_id, flow in updates.items():
             events[event_id] = replace(events[event_id], flow=flow)
+        outputs: dict[str, set[str]] = {key: set() for key in events}
         for result in results.values():
             if result.event_id not in events:
                 raise ValidationError(f"unknown result owner: {result.event_id}")
             if not set(result.recipient_roles) <= set(events[result.event_id].roles):
                 raise ValidationError(f"unknown recipient role on result: {result.id}")
+            outputs[result.event_id].add(result.id)
         seen: set[tuple[str, str]] = set()
         incoming: dict[str, list[Connection]] = {key: [] for key in events}
         outgoing: dict[str, list[Connection]] = {key: [] for key in results}
@@ -157,17 +146,30 @@ class EventGraph:
                 raise ValidationError(f"unknown target role: {connection.target_role}")
             incoming[connection.target_event].append(connection)
             outgoing[connection.source_result].append(connection)
+        schemas = {
+            key: EventSchema(
+                event,
+                frozenset(c.source_result for c in incoming[key] if c.kind is InputKind.TRIGGER),
+                frozenset(c.source_result for c in incoming[key] if c.kind is InputKind.RELATED),
+                frozenset(outputs[key]),
+            )
+            for key, event in events.items()
+        }
         changed = set()
         for event_id in self._events:
             old_outputs = self.schema(event_id).outputs
-            new_outputs = self._schema(event_id, events, results, connections).outputs
+            new_outputs = schemas[event_id].outputs
             if old_outputs != new_outputs or set(self._incoming[event_id]) != set(incoming[event_id]):
                 changed.add(event_id)
         missing = changed - set(updates)
         if missing:
             raise MissingFlowUpdate(f"explicit flow updates required for: {sorted(missing)}")
+        rank_events(events, (
+            (results[c.source_result].event_id, c.target_event)
+            for c in connections if c.kind is InputKind.TRIGGER
+        ))
         for event_id, event in events.items():
-            schema = self._schema(event_id, events, results, connections)
+            schema = schemas[event_id]
             event.flow.validate(schema.related_items, schema.outputs)
         report = MutationReport(
             revision=self._revision + 1,
@@ -182,6 +184,7 @@ class EventGraph:
         self._connections = tuple(connections)
         self._incoming = {key: tuple(value) for key, value in incoming.items()}
         self._outgoing = {key: tuple(value) for key, value in outgoing.items()}
+        self._schemas = schemas
         self._retired_results.update(removed)
         self._revision = report.revision
         return report
@@ -251,4 +254,3 @@ class EventGraph:
         )
         history._append(execution)
         return execution
-

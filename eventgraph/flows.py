@@ -36,6 +36,13 @@ class Flow(ABC):
         """Return one joint outcome: zero or more declared output result IDs."""
 
 
+class UnconfiguredFlow(Flow):
+    """An editable definition without execution rules; never invent an outcome."""
+
+    def resolve(self, inputs: frozenset[str]) -> frozenset[str]:
+        raise UndefinedInput("event flow has not been configured")
+
+
 @dataclass(frozen=True, init=False)
 class TableFlow(Flow):
     """Exact combination lookup, with optional fallback and explicit domain.
@@ -108,4 +115,3 @@ class TableFlow(Flow):
         if self.default is not None:
             return self.default
         raise UndefinedInput(f"no flow case for input combination: {inputs}")
-

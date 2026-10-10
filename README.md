@@ -4,6 +4,12 @@
 
 事件之间的连接表示数据依赖，不表示人物必须沿着图中的固定路径行动。
 
+## 跨设备继续工作
+
+项目进度与协作决定保存在 [工作上下文](docs/context.md)，可读对话和恢复步骤见 [对话记录](docs/conversations/README.md)。这些文件与根目录 [AGENTS.md](AGENTS.md) 一起提交并推送后，可在另一台设备克隆项目，让新对话读取并继续工作。
+
+三维可视化 App 的已确认需求见 [App 基本要求](docs/app-requirements.md)。已实现 JSON 解析、三维布局和本地交互查看器。使用方法见 [JSON 与布局接口](docs/json-layout.md) 和 [三维查看器](docs/viewer.md)；可视化节点编辑待后续实现。
+
 ## 环境与运行
 
 - Python 3.10 或更高版本。
@@ -12,10 +18,23 @@
 
 ```bash
 python3 -m examples.school_world
+python3 -m eventgraph examples/events.json -o layout.json
 python3 -m unittest discover -s tests -v
 ```
 
 如需在其他项目导入，可选择在虚拟环境中运行 `python3 -m pip install -e .`；构建依赖由 `pyproject.toml` 声明。
+
+第二条命令输出规范化事件定义、三维节点坐标和完整业务连接，供后续渲染器使用。布局按必需触发依赖及严格分离的时间窗口确定层级，允许双向相关项；事件 JSON 可以暂不提供执行流程。
+
+## 查看三维图谱
+
+```bash
+python3 -m eventgraph.viewer examples/branching.json --port 8765
+```
+
+在浏览器打开 `http://127.0.0.1:8765`。黑底电蓝线束与青色节点，支持旋转、缩放、节点聚焦、JSON 导入及布局导出；全部资源在本地，不依赖 CDN。终端按 Ctrl+C 停止服务。导入仅替换浏览器当前视图，不写回原文件。
+
+![三维查看器](docs/concepts/viewer-preview.png)
 
 ## 事件的七项属性
 
@@ -30,6 +49,8 @@ python3 -m unittest discover -s tests -v
 | 输出 | `graph.schema(id).outputs` | 该事件可能产生的结果集合 |
 
 触发条件、相关项和输出直接从图中派生，只有一份事实来源，不另存容易失配的副本。触发条件与相关项不相交，但两者对应的结果可以同时存在于人物经历中。
+
+必需触发依赖与窗口先后约束的合并图必须无环，非法更新在提交前拒绝；相关项连接不受此无环要求限制。
 
 ## 图结构
 
@@ -169,4 +190,3 @@ flow = TableFlow(
 经历是追加式事实，当前触发条件是“全部指定结果已经存在”。撤销、资源消耗、否定条件、按次数判断、角色认知隔离和复杂空间关系尚未建模。一个结果在一个目标事件中只有一条连接，不能同时属于两类输入，也不能用同一个结果 ID 分别占据该事件的多个角色输入。
 
 详见 [设计说明](docs/design.md)、[API 说明](docs/api.md) 和 [完整示例](examples/school_world.py)。
-

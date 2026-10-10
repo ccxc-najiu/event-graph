@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>EventGraph · 事件图谱</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="EventGraph 首页"><span class="brand-mark" aria-hidden="true">⌘</span>EventGraph<span class="edition">STUDIO</span></a>
+    <div class="breadcrumb"><span>工作空间</span><span class="slash">/</span><span id="scene-name">载入中</span></div>
+    <div class="header-actions"><button id="import-open" class="button">导入 JSON</button><button id="export" class="button primary" disabled>导出布局 <span aria-hidden="true">↗</span></button></div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar" aria-label="事件目录">
+      <div class="section-heading"><h2>事件目录</h2><span id="node-count" class="count">0</span></div>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索事件名称或 ID" aria-label="搜索事件"></label>
+      <div id="node-list" class="node-list" aria-label="事件列表"></div>
+      <div class="sidebar-foot"><span class="status-dot"></span>本地工作空间<span class="local-note">JSON 驱动</span></div>
+    </aside>
+    <main class="viewport" aria-label="三维事件图">
+      <div class="view-heading"><div class="eyebrow">RELATIONSHIP MAP</div><h1>事件图谱</h1><p>先后关系 · 结果连接</p></div>
+      <div class="view-settings"><label><input id="related" type="checkbox">相关项</label><label><input id="labels" type="checkbox" checked>名称</label><label><input id="glow" type="checkbox" checked>辉光</label></div>
+      <canvas id="graph" tabindex="0" aria-label="三维事件图。拖动旋转，滚轮缩放，Shift 拖动平移。也可用方向键旋转、加减键缩放、Home 复位。通过左侧事件列表查看节点详情。"></canvas>
+      <div id="canvas-message" class="canvas-message" role="status">正在载入图谱…</div>
+      <div class="view-bottom">
+        <div class="legend"><span><i class="line trigger"></i>因果枝桠</span><span><i class="line related"></i>关联粒子</span></div>
+        <div class="camera-controls" aria-label="相机控制"><button id="rotate" aria-pressed="false">↻ <span>环绕</span></button><button id="front">正视</button><button id="reset">复位</button><span class="divider"></span><button id="zoom-out" aria-label="缩小">−</button><output id="zoom" aria-label="缩放比例">100%</output><button id="zoom-in" aria-label="放大">＋</button></div>
+        <div class="gesture-hint">拖动旋转 · 滚轮缩放</div>
+      </div>
+    </main>
+    <aside class="inspector" aria-label="事件详情">
+      <div class="section-heading"><h2>节点详情</h2><button id="clear-selection" class="icon-button" aria-label="取消选择" hidden>×</button></div>
+      <div id="detail-empty" class="detail-empty"><div class="empty-orbit" aria-hidden="true"><span></span></div><h3>探索连接的可能</h3><p>选择一个节点，查看它的时间窗口、结果与关联事件。</p><dl class="scene-facts"><div><dt>事件</dt><dd id="fact-events">—</dd></div><div><dt>触发连接</dt><dd id="fact-triggers">—</dd></div><div><dt>相关连接</dt><dd id="fact-related">—</dd></div></dl><p class="quiet-note">高度表示先后层级<br>不代表实际发生时间</p></div>
+      <div id="detail" hidden><div class="eyebrow detail-eyebrow" id="detail-rank"></div><h3 id="detail-name"></h3><p id="detail-id" class="mono"></p><section><h4>允许发生的时间窗口</h4><div id="detail-time" class="time-window"></div></section><section><h4>参与角色</h4><div id="detail-roles" class="tags"></div></section><section><h4>产出结果 <span id="result-count" class="count"></span></h4><div id="detail-results"></div></section><section><h4>输入来源</h4><div id="detail-incoming"></div></section><section><h4>影响去向</h4><div id="detail-outgoing"></div></section></div>
+      <div class="inspector-foot"><span class="status-dot"></span>选择节点后聚焦直接关联</div>
+    </aside>
+  </div>
+  <footer class="statusbar"><span id="summary">准备就绪</span><span id="notification" role="status" aria-live="polite"></span><span>EVENTGRAPH / 3D</span></footer>
+  <div id="error-banner" role="alert" hidden><span id="error-message"></span><button id="error-close" aria-label="关闭错误提示">×</button></div>
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <form id="import-form"><div class="dialog-heading"><div><div class="eyebrow">IMPORT GRAPH</div><h2 id="import-title">导入事件图谱</h2></div><button id="import-close" type="button" class="icon-button" aria-label="关闭导入">×</button></div>
+      <p>选择事件 JSON，或直接粘贴内容。载入成功后替换当前视图，原文件保持不变。</p>
+      <label class="file-picker">选择 JSON 文件<input id="file-input" type="file" accept=".json,application/json"><span id="filename">未选择文件</span></label>
+      <label for="json-input" class="field-label">JSON 内容</label><textarea id="json-input" spellcheck="false" placeholder='{"version": 1, "events": [...]}' required></textarea>
+      <p id="import-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button id="import-cancel" type="button" class="button">取消</button><button id="import-submit" class="button primary" type="submit">载入图谱</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

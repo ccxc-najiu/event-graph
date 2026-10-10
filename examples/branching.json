@@ -1,0 +1,757 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "origin",
+      "description": "启程",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 0,
+        "end": 12
+      }
+    },
+    {
+      "id": "learn",
+      "description": "学习",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 3,
+        "end": 15
+      }
+    },
+    {
+      "id": "explore",
+      "description": "探索",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 3,
+        "end": 15
+      }
+    },
+    {
+      "id": "meet",
+      "description": "相遇",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 3,
+        "end": 15
+      }
+    },
+    {
+      "id": "theory",
+      "description": "理论基础",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "observe",
+      "description": "观察世界",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "craft",
+      "description": "动手实践",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "travel",
+      "description": "远行",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "friend",
+      "description": "结识同伴",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "share",
+      "description": "交流想法",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 6,
+        "end": 18
+      }
+    },
+    {
+      "id": "question",
+      "description": "提出问题",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "research",
+      "description": "深入研究",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "experiment",
+      "description": "验证想法",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "create",
+      "description": "创作作品",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "discover",
+      "description": "发现方向",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "challenge",
+      "description": "接受挑战",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "cooperate",
+      "description": "协作",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "community",
+      "description": "建立社群",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "inspire",
+      "description": "获得启发",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 9,
+        "end": 21
+      }
+    },
+    {
+      "id": "insight",
+      "description": "形成洞见",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "answer",
+      "description": "找到答案",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "prototype",
+      "description": "完成原型",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "work",
+      "description": "发布作品",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "newpath",
+      "description": "开辟路径",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "skill",
+      "description": "掌握技能",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "team",
+      "description": "组成团队",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "connection",
+      "description": "建立连接",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    },
+    {
+      "id": "vision",
+      "description": "新的愿景",
+      "roles": [
+        "actor"
+      ],
+      "time": {
+        "start": 12,
+        "end": 24
+      }
+    }
+  ],
+  "results": [
+    {
+      "id": "origin.result",
+      "event_id": "origin",
+      "description": "启程的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "learn.result",
+      "event_id": "learn",
+      "description": "学习的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "explore.result",
+      "event_id": "explore",
+      "description": "探索的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "meet.result",
+      "event_id": "meet",
+      "description": "相遇的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "theory.result",
+      "event_id": "theory",
+      "description": "理论基础的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "observe.result",
+      "event_id": "observe",
+      "description": "观察世界的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "craft.result",
+      "event_id": "craft",
+      "description": "动手实践的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "travel.result",
+      "event_id": "travel",
+      "description": "远行的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "friend.result",
+      "event_id": "friend",
+      "description": "结识同伴的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "share.result",
+      "event_id": "share",
+      "description": "交流想法的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "question.result",
+      "event_id": "question",
+      "description": "提出问题的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "research.result",
+      "event_id": "research",
+      "description": "深入研究的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "experiment.result",
+      "event_id": "experiment",
+      "description": "验证想法的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "create.result",
+      "event_id": "create",
+      "description": "创作作品的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "discover.result",
+      "event_id": "discover",
+      "description": "发现方向的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "challenge.result",
+      "event_id": "challenge",
+      "description": "接受挑战的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "cooperate.result",
+      "event_id": "cooperate",
+      "description": "协作的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "community.result",
+      "event_id": "community",
+      "description": "建立社群的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "inspire.result",
+      "event_id": "inspire",
+      "description": "获得启发的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "insight.result",
+      "event_id": "insight",
+      "description": "形成洞见的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "answer.result",
+      "event_id": "answer",
+      "description": "找到答案的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "prototype.result",
+      "event_id": "prototype",
+      "description": "完成原型的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "work.result",
+      "event_id": "work",
+      "description": "发布作品的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "newpath.result",
+      "event_id": "newpath",
+      "description": "开辟路径的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "skill.result",
+      "event_id": "skill",
+      "description": "掌握技能的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "team.result",
+      "event_id": "team",
+      "description": "组成团队的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "connection.result",
+      "event_id": "connection",
+      "description": "建立连接的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    },
+    {
+      "id": "vision.result",
+      "event_id": "vision",
+      "description": "新的愿景的结果",
+      "recipient_roles": [
+        "actor"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "source_result": "origin.result",
+      "target_event": "learn",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "origin.result",
+      "target_event": "explore",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "origin.result",
+      "target_event": "meet",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "learn.result",
+      "target_event": "theory",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "learn.result",
+      "target_event": "observe",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "explore.result",
+      "target_event": "craft",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "explore.result",
+      "target_event": "travel",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "meet.result",
+      "target_event": "friend",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "meet.result",
+      "target_event": "share",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "theory.result",
+      "target_event": "question",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "theory.result",
+      "target_event": "research",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "observe.result",
+      "target_event": "experiment",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "craft.result",
+      "target_event": "experiment",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "craft.result",
+      "target_event": "create",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "travel.result",
+      "target_event": "discover",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "travel.result",
+      "target_event": "challenge",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "friend.result",
+      "target_event": "cooperate",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "friend.result",
+      "target_event": "community",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "share.result",
+      "target_event": "community",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "share.result",
+      "target_event": "inspire",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "question.result",
+      "target_event": "insight",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "research.result",
+      "target_event": "insight",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "research.result",
+      "target_event": "answer",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "experiment.result",
+      "target_event": "prototype",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "create.result",
+      "target_event": "work",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "discover.result",
+      "target_event": "newpath",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "challenge.result",
+      "target_event": "skill",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "cooperate.result",
+      "target_event": "team",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "community.result",
+      "target_event": "connection",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "inspire.result",
+      "target_event": "vision",
+      "kind": "trigger",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "learn.result",
+      "target_event": "explore",
+      "kind": "related",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "explore.result",
+      "target_event": "learn",
+      "kind": "related",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "share.result",
+      "target_event": "craft",
+      "kind": "related",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "create.result",
+      "target_event": "community",
+      "kind": "related",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "community.result",
+      "target_event": "create",
+      "kind": "related",
+      "target_role": "actor"
+    },
+    {
+      "source_result": "insight.result",
+      "target_event": "vision",
+      "kind": "related",
+      "target_role": "actor"
+    }
+  ]
+}

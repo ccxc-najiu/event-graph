@@ -13,3 +13,5 @@ dependencies = []
 [tool.setuptools.packages.find]
 include = ["eventgraph*"]
 
+[tool.setuptools.package-data]
+eventgraph = ["web/*.html", "web/*.css", "web/*.js"]
