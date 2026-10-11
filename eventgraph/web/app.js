@@ -153,6 +153,13 @@ try {
   for (const [id,option] of [['related','showRelated'],['labels','showLabels'],['glow','glow']]) {
     $(id).addEventListener('change',()=>renderer.setOption(option,$(id).checked));
   }
+  for (const form of ['simple','natural']) {
+    $(`form-${form}`).addEventListener('click',()=>{
+      renderer.setForm(form);
+      for(const name of ['simple','natural']) $(`form-${name}`).setAttribute('aria-pressed',String(name===form));
+      document.querySelector('.viewport').classList.toggle('natural-form',form==='natural');
+    });
+  }
   $('rotate').addEventListener('click',()=>{
     renderer.setOption('rotate',!renderer.rotate);
     $('rotate').setAttribute('aria-pressed',String(renderer.rotate));

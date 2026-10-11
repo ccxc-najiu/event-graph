@@ -1,6 +1,6 @@
 """Run from the repository root: python3 -m examples.school_world."""
 
-from eventgraph import Connection, Event, EventGraph, History, InputKind, Result, TableFlow
+from eventgraph import Connection, FlowEvent, EventGraph, History, InputKind, Result, TableFlow
 
 
 def main():
@@ -8,10 +8,10 @@ def main():
     history = History()
     graph.append(
         events=[
-            Event("admission", ("candidate_a", "candidate_b", "examiner"),
+            FlowEvent("admission", ("candidate_a", "candidate_b", "examiner"),
                   TableFlow(default={"admission.pass", "admission.fail", "admission.examined"})),
-            Event("final", ("student", "teacher"), TableFlow(default={"final.high"})),
-            Event("job", ("applicant", "interviewer"), TableFlow(
+            FlowEvent("final", ("student", "teacher"), TableFlow(default={"final.high"})),
+            FlowEvent("job", ("applicant", "interviewer"), TableFlow(
                 {frozenset({"final.high"}): {"job.hired", "job.interviewed"}},
                 default={"job.rejected", "job.interviewed"},
             )),
@@ -40,10 +40,10 @@ def main():
 
     # Add an independent event and explicitly describe its effect on job's process.
     report = graph.append(
-        events=[Event("apprenticeship", ("worker",), TableFlow(default={"work.experience"}))],
+        events=[FlowEvent("apprenticeship", ("worker",), TableFlow(default={"work.experience"}))],
         results=[Result("work.experience", "apprenticeship", ("worker",))],
         connections=[Connection("work.experience", "job", InputKind.RELATED, "applicant")],
-        flow_updates={"job": TableFlow({
+        content_updates={"job": TableFlow({
             frozenset({"final.high"}): {"job.hired", "job.interviewed"},
             frozenset({"work.experience"}): {"job.hired", "job.interviewed"},
             frozenset({"final.high", "work.experience"}): {"job.hired", "job.interviewed"},
@@ -59,7 +59,7 @@ def main():
     graph.replace_result(
         "final.high", Result("final.excellent", "final", ("student",)),
         connections=[Connection("final.excellent", "job", InputKind.RELATED, "applicant")],
-        flow_updates={
+        content_updates={
             "final": TableFlow(default={"final.excellent"}),
             "job": TableFlow({
                 frozenset({"final.excellent"}): {"job.hired", "job.interviewed"},

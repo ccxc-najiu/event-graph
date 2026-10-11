@@ -8,7 +8,7 @@
 Event(
     id: str,
     roles: tuple[str, ...],
-    flow: Flow,
+    content: object,
     time: TimeWindow = TimeWindow(),
     locations: frozenset[str] = frozenset(),
     description: str = "",
@@ -23,6 +23,27 @@ Result(
 ```
 
 定义为冻结数据类。ID 必须是非空字符串；结果 ID 在一个图的生命周期中不能重用。`recipient_roles` 必须属于结果所属事件的角色集合。
+
+`Event.content` 替代原 `flow` 属性，类型为 `object`。内容对象必须公开 `description: str`，用一句非空、单行文字描述内容；不要求继承指定类。`Event.description` 仍是事件名称/说明，`content.description` 是内容摘要，需要渲染内容时只读取后者，不判断内容类型。当前悬停仍只显示节点名称，不显示内容摘要，也未新增描述面板。
+
+可使用 `NodeContent(description, data=None)` 保存通用内容；也可以使用自己的类。基础 `Event` 不解释内容，直接执行会抛出 `UndefinedInput`。事件派生类通过 `validate_content(related_ids, output_ids)` 校验内容，通过 `resolve(inputs)` 产生结果。已有流程改用 `FlowEvent(..., content=TableFlow(...))`，它将这两个方法转交给内容中的 `Flow`。
+
+```python
+from dataclasses import dataclass
+from eventgraph import Event, NodeContent, FlowEvent, TableFlow
+
+@dataclass(frozen=True)
+class DialogueContent:
+    description: str
+    lines: tuple[str, ...]
+
+node = Event("greeting", ("speaker",),
+             DialogueContent("角色向来访者问好。", ("你好！",)))
+flow_node = FlowEvent("study", ("student",),
+                      TableFlow(default={"knowledge"}, description="通过学习获得知识。"))
+```
+
+内容只受浅层冻结保护；插入图后应视为不可变对象。自定义校验不得修改内容、图或外部状态；事务无法回滚调用者对象的任意副作用。
 
 `TimeWindow(start=None, end=None)` 使用闭区间，无界端点为 `None`。数值必须有限，起点不能晚于终点。没有内置日历或时区换算，整个月份、天、秒等单位由应用统一决定。
 
@@ -43,15 +64,17 @@ Connection(
 
 ```python
 graph.append(
-    *, events=(), results=(), connections=(), flow_updates=None
+    *, events=(), results=(), connections=(), content_updates=None
 ) -> MutationReport
 
 graph.replace_result(
-    old_result, new_result, *, connections=(), flow_updates=None
+    old_result, new_result, *, connections=(), content_updates=None
 ) -> MutationReport
 ```
 
-`flow_updates` 是 `{事件 ID: 新 Flow 对象}`，不自动推导更新。`append` 不删除已有定义；替换必须使用 `replace_result`。已有事件输入连接或输出集合变化，必须提供更新；允许显式传回同一个 Flow 对象以确认它仍适用。
+`content_updates` 是 `{事件 ID: 新内容对象}`，不自动推导更新。`append` 不删除已有定义；替换必须使用 `replace_result`。已有事件输入连接或输出集合变化，必须提供更新；允许显式传回同一个内容对象以确认它仍适用。
+
+更新使用 `dataclasses.replace`，保留事件派生类型。旧 `flow_updates` 参数仍是兼容别名，但不能与 `content_updates` 同时传入。`Event(..., flow=...)` 和 `.flow` 已移除，Python 调用者需迁移到 `content` 与对应派生类。
 
 `MutationReport` 包括：`revision`、`added_events`、`added_results`、`removed_results`、`updated_events`。新事件列在 `added_events`，不重复列在 `updated_events`。
 
@@ -136,7 +159,7 @@ history.experiences(id)   # 此人物参与过的 Execution 元组
 | --- | --- |
 | `EventGraphError` | 所有库异常的共同基类 |
 | `ValidationError` | 无效定义、引用、流程输出或运行参数 |
-| `MissingFlowUpdate` | 输入/输出接口改变但未明确更新流程；继承 ValidationError |
+| `MissingContentUpdate` | 输入/输出接口改变但未明确更新内容；继承 ValidationError，`MissingFlowUpdate` 为兼容别名 |
 | `NotEnabled` | 时间、地点或触发条件不满足 |
 | `UndefinedInput` | 实际相关项组合不在流程覆盖域中 |
 

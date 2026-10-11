@@ -9,8 +9,12 @@ class ValidationError(EventGraphError, ValueError):
     """Invalid definition, connection, or flow."""
 
 
-class MissingFlowUpdate(ValidationError):
-    """An existing event's interface changed without an explicit flow update."""
+class MissingContentUpdate(ValidationError):
+    """An existing event's interface changed without an explicit content update."""
+
+
+# Compatibility for callers handling the original flow-specific error.
+MissingFlowUpdate = MissingContentUpdate
 
 
 class NotEnabled(EventGraphError):

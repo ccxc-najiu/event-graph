@@ -3,7 +3,7 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
-from math import isfinite, sqrt
+from math import cos, hypot, isfinite, pi, sin, sqrt
 from types import MappingProxyType
 
 from .errors import ValidationError
@@ -217,3 +217,138 @@ def layout_graph(
             raise ValidationError("layout coordinates overflow; reduce spacing")
         positions[name] = Position(x, y, z, ranks[name])
     return Layout(positions, relations, spacing, gap)
+
+
+def _nearby_related(layout: Layout) -> Layout:
+    """Shorten vines within a bounded neighborhood of the original tree shape."""
+    related = {name: set() for name in layout.positions}
+    triggers = {name: set() for name in layout.positions}
+    for link in layout.relations.links:
+        if link.source == link.target:
+            continue
+        neighbors = related if link.kind is InputKind.RELATED else triggers
+        neighbors[link.source].add(link.target)
+        neighbors[link.target].add(link.source)
+    if not any(related.values()):
+        return layout
+    # Work in grid units so the same decisions hold at any physical spacing.
+    spacing = layout.node_spacing
+    anchors = {name: (p.x / spacing, p.z / spacing) for name, p in layout.positions.items()}
+    slots = {name: _cell(*point, 1.0) for name, point in anchors.items()}
+    points = dict(anchors)
+    occupied = defaultdict(set)
+    for name, slot in slots.items():
+        occupied[layout.positions[name].rank].add(slot)
+    order = sorted(points, key=lambda name: (layout.positions[name].rank, name))
+    related = {name: sorted(items) for name, items in related.items()}
+    triggers = {name: sorted(items) for name, items in triggers.items()}
+
+    def cost(name, point):
+        x, z = point
+        ax, az = anchors[name]
+        shape = .18 * ((x - ax) ** 2 + (z - az) ** 2)
+        for other in triggers[name]:
+            ox, oz = points[other]
+            bx, bz = anchors[other]
+            # Preserve trigger branch directions while allowing connected limbs
+            # to follow a moved endpoint instead of leaving a sharp local kink.
+            shape += .35 * ((x - ox - ax + bx) ** 2 + (z - oz - az + bz) ** 2)
+        vines = sum(hypot(x - points[other][0], z - points[other][1],
+                          (layout.positions[name].y - layout.positions[other].y) / spacing)
+                    for other in related[name])
+        return shape + 3.0 * vines, vines
+
+    for sweep in range(10):
+        moved = False
+        for name in order if sweep % 2 == 0 else reversed(order):
+            ax, az = anchors[name]
+            radius = hypot(ax, az)
+            if not radius:  # Keep the single causal root on the trunk.
+                continue
+            old = slots[name]
+            rank = layout.positions[name].rank
+            best, old_vines = cost(name, points[name])
+            chosen = old
+            for slot in sorted(_ring(old, 1)):
+                if slot == (0, 0) or slot in occupied[rank]:
+                    continue
+                x, z = _point(slot, 1.0)
+                if not .8 * radius <= hypot(x, z) <= 1.2 * radius:
+                    continue
+                if hypot(x - ax, z - az) > max(1.0, .65 * radius):
+                    continue
+                score, vines = cost(name, (x, z))
+                # The tree-shape compromise must not lengthen the total vines.
+                if vines <= old_vines + 1e-9 and score < best - 1e-9:
+                    best, chosen = score, slot
+            if chosen != old:
+                occupied[rank].remove(old)
+                occupied[rank].add(chosen)
+                slots[name] = chosen
+                points[name] = _point(chosen, 1.0)
+                moved = True
+        if not moved:
+            break
+    positions = {name: Position(points[name][0] * spacing, p.y,
+                                points[name][1] * spacing, p.rank)
+                 for name, p in layout.positions.items()}
+    return Layout(positions, layout.relations, spacing, layout.layer_spacing)
+
+
+def spread_canopy(layout: Layout, *, related_proximity: bool = True) -> Layout:
+    """Viewer tree silhouette; preserve ranks, Y and every business connection.
+
+    A primary trigger parent only assigns angular sectors for geometry. Other
+    incoming triggers remain visible links. Hexagonal seats keep nodes apart.
+    Related links favor nearby positions without changing ranks or branch owners.
+    """
+    positions = layout.positions
+    order = sorted(positions, key=lambda name: (positions[name].rank, name))
+    parents = {name: set() for name in order}
+    children = {name: [] for name in order}
+    for link in layout.relations.links:
+        if link.kind is InputKind.TRIGGER:
+            parents[link.target].add(link.source)
+    roots = []
+    for name in order:
+        if parents[name]:
+            parent = min(parents[name], key=lambda p: (-positions[p].rank, p))
+            children[parent].append(name)
+        else:
+            roots.append(name)
+    leaves = {}
+    for name in reversed(order):
+        children[name].sort()
+        leaves[name] = max(1, sum(leaves[c] for c in children[name]))
+    total = sum(leaves[name] for name in roots)
+    sectors = {}
+
+    def partition(names, start, end, depth):
+        weight = sum(leaves[name] for name in names)
+        cursor = start
+        for name in names:
+            stop = cursor + (end - start) * leaves[name] / weight
+            sectors[name] = (cursor, stop, depth)
+            cursor = stop
+
+    if total:
+        partition(roots, -.4, 2 * pi - .4, 0)
+    occupied = defaultdict(set)
+    result = {}
+    for name in order:
+        start, end, depth = sectors[name]
+        if children[name]:
+            partition(children[name], start, end, depth + 1)
+        angle = (start + end) / 2
+        radius = layout.node_spacing * 1.6 * sqrt(depth + (1 if len(roots) > 1 else 0))
+        target_x, target_z = cos(angle) * radius, sin(angle) * radius
+        rank = positions[name].rank
+        # Reserve the trunk axis except for the single causal root.
+        if radius:
+            occupied[rank].add((0, 0))
+        slot = _seat(target_x, target_z, occupied[rank], layout.node_spacing)
+        occupied[rank].add(slot)
+        x, z = _point(slot, layout.node_spacing)
+        result[name] = Position(x, positions[name].y, z, rank)
+    spread = Layout(result, layout.relations, layout.node_spacing, layout.layer_spacing)
+    return _nearby_related(spread) if related_proximity else spread

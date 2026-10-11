@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from eventgraph import (
-    Connection, Event, EventGraph, Flow, History, InputKind, Result, TableFlow,
+    Connection, FlowEvent, EventGraph, Flow, History, InputKind, Result, TableFlow,
     TimeWindow, UndefinedInput, ValidationError, analyze_graph, dumps_graph,
     graph_from_dict, graph_to_dict, layout_graph, loads_graph,
 )
@@ -32,9 +32,9 @@ class DocumentTests(unittest.TestCase):
     def test_roundtrip_preserves_rules_and_execution(self):
         graph = EventGraph()
         graph.append(
-            events=[Event("a", ("person",), TableFlow(default={"a.out"}),
+            events=[FlowEvent("a", ("person",), TableFlow(default={"a.out"}),
                           TimeWindow(0, 4), frozenset({"school"}), "入学"),
-                    Event("b", ("person",), TableFlow(
+                    FlowEvent("b", ("person",), TableFlow(
                         {frozenset({"a.out"}): {"b.out"}}, default=set(),
                         input_domain=[set(), {"a.out"}],
                     ))],
@@ -63,7 +63,7 @@ class DocumentTests(unittest.TestCase):
 
     def test_invalid_json_is_rejected(self):
         for text in ('{"version":1,"version":1,"events":[]}', '{', '[]',
-                     '{"version":true,"events":[]}', '{"version":2,"events":[]}',
+                     '{"version":true,"events":[]}', '{"version":3,"events":[]}',
                      '{"version":1,"events":[],"surprise":0}',
                      '{"version":1,"events":[{"id":"a","time":{"end":NaN}}]}',
                      '{"version":1,"events":[{"id":"a","time":{"end":1e400}}]}'):
@@ -107,7 +107,7 @@ class DocumentTests(unittest.TestCase):
             def resolve(self, inputs):
                 return frozenset()
         graph = EventGraph()
-        graph.append(events=[Event("a", (), Custom())])
+        graph.append(events=[FlowEvent("a", (), Custom())])
         with self.assertRaisesRegex(ValidationError, "custom Python flow"):
             dumps_graph(graph)
 
@@ -166,7 +166,7 @@ class OrderingTests(unittest.TestCase):
         revision, schema = graph.revision, graph.schema("a")
         with self.assertRaisesRegex(ValidationError, "precedence cycle"):
             graph.append(connections=[Connection("b.out", "a", InputKind.TRIGGER)],
-                         flow_updates={"a": graph.events["a"].flow})
+                         content_updates={"a": graph.events["a"].content})
         self.assertEqual(dumps_graph(graph), before)
         self.assertEqual(graph.revision, revision)
         self.assertIs(graph.schema("a"), schema)
@@ -178,7 +178,7 @@ class OrderingTests(unittest.TestCase):
             graph.replace_result(
                 "b.out", Result("b.new", "b"),
                 connections=[Connection("b.new", "a", InputKind.TRIGGER)],
-                flow_updates={"a": graph.events["a"].flow, "b": graph.events["b"].flow},
+                content_updates={"a": graph.events["a"].content, "b": graph.events["b"].content},
             )
         self.assertEqual(dumps_graph(graph), before)
 

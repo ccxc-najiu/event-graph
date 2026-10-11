@@ -12,7 +12,7 @@ from .layout import layout_graph
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Parse event JSON and generate a 3D layout.")
-    parser.add_argument("source", type=Path, help="version 1 event JSON")
+    parser.add_argument("source", type=Path, help="version 2 event JSON (also accepts version 1)")
     parser.add_argument("-o", "--output", type=Path, help="write geometry JSON (default: stdout)")
     parser.add_argument("--node-spacing", type=float, default=3.0)
     parser.add_argument("--layer-spacing", type=float, default=5.0)

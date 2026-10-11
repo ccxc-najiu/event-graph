@@ -1,36 +1,275 @@
 {
-  "version": 1,
+  "version": 2,
   "events": [
-    {"id": "admission", "description": "入学", "roles": ["student"], "time": {"start": 0, "end": 2}},
-    {"id": "study", "description": "学习", "roles": ["student"], "time": {"start": 3, "end": 12}},
-    {"id": "practice", "description": "实践", "roles": ["student"], "time": {"start": 4, "end": 14}},
-    {"id": "club", "description": "社团", "roles": ["student"], "time": {"start": 3, "end": 14}},
-    {"id": "exam", "description": "考试", "roles": ["student"], "time": {"start": 10, "end": 16}},
-    {"id": "project", "description": "项目", "roles": ["student"], "time": {"start": 10, "end": 18}},
-    {"id": "graduation", "description": "毕业", "roles": ["student"], "time": {"start": 17, "end": 20}},
-    {"id": "job", "description": "求职", "roles": ["student"], "time": {"start": 18, "end": null}}
+    {
+      "id": "admission",
+      "description": "入学",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 0,
+        "end": 2
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "club",
+      "description": "社团",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 3,
+        "end": 14
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "exam",
+      "description": "考试",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 10,
+        "end": 16
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "graduation",
+      "description": "毕业",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 17,
+        "end": 20
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "job",
+      "description": "求职",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 18,
+        "end": null
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "practice",
+      "description": "实践",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 4,
+        "end": 14
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "project",
+      "description": "项目",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 10,
+        "end": 18
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    },
+    {
+      "id": "study",
+      "description": "学习",
+      "roles": [
+        "student"
+      ],
+      "locations": [],
+      "time": {
+        "start": 3,
+        "end": 12
+      },
+      "type": "event",
+      "content": {
+        "description": "尚未配置节点内容。",
+        "data": null
+      }
+    }
   ],
   "results": [
-    {"id": "admitted", "event_id": "admission", "recipient_roles": ["student"]},
-    {"id": "knowledge", "event_id": "study", "recipient_roles": ["student"]},
-    {"id": "experience", "event_id": "practice", "recipient_roles": ["student"]},
-    {"id": "friends", "event_id": "club", "recipient_roles": ["student"]},
-    {"id": "passed", "event_id": "exam", "recipient_roles": ["student"]},
-    {"id": "portfolio", "event_id": "project", "recipient_roles": ["student"]},
-    {"id": "degree", "event_id": "graduation", "recipient_roles": ["student"]},
-    {"id": "offer", "event_id": "job", "recipient_roles": ["student"]}
+    {
+      "id": "admitted",
+      "event_id": "admission",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "degree",
+      "event_id": "graduation",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "experience",
+      "event_id": "practice",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "friends",
+      "event_id": "club",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "knowledge",
+      "event_id": "study",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "offer",
+      "event_id": "job",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "passed",
+      "event_id": "exam",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    },
+    {
+      "id": "portfolio",
+      "event_id": "project",
+      "recipient_roles": [
+        "student"
+      ],
+      "description": ""
+    }
   ],
   "connections": [
-    {"source_result": "admitted", "target_event": "study", "kind": "trigger", "target_role": "student"},
-    {"source_result": "admitted", "target_event": "club", "kind": "trigger", "target_role": "student"},
-    {"source_result": "knowledge", "target_event": "exam", "kind": "trigger", "target_role": "student"},
-    {"source_result": "knowledge", "target_event": "practice", "kind": "related", "target_role": "student"},
-    {"source_result": "experience", "target_event": "study", "kind": "related", "target_role": "student"},
-    {"source_result": "knowledge", "target_event": "project", "kind": "trigger", "target_role": "student"},
-    {"source_result": "experience", "target_event": "project", "kind": "trigger", "target_role": "student"},
-    {"source_result": "passed", "target_event": "graduation", "kind": "trigger", "target_role": "student"},
-    {"source_result": "degree", "target_event": "job", "kind": "trigger", "target_role": "student"},
-    {"source_result": "portfolio", "target_event": "job", "kind": "related", "target_role": "student"},
-    {"source_result": "friends", "target_event": "job", "kind": "related", "target_role": "student"}
+    {
+      "source_result": "admitted",
+      "target_event": "club",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "admitted",
+      "target_event": "study",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "degree",
+      "target_event": "job",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "experience",
+      "target_event": "project",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "experience",
+      "target_event": "study",
+      "kind": "related",
+      "target_role": "student"
+    },
+    {
+      "source_result": "friends",
+      "target_event": "job",
+      "kind": "related",
+      "target_role": "student"
+    },
+    {
+      "source_result": "knowledge",
+      "target_event": "exam",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "knowledge",
+      "target_event": "practice",
+      "kind": "related",
+      "target_role": "student"
+    },
+    {
+      "source_result": "knowledge",
+      "target_event": "project",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "passed",
+      "target_event": "graduation",
+      "kind": "trigger",
+      "target_role": "student"
+    },
+    {
+      "source_result": "portfolio",
+      "target_event": "job",
+      "kind": "related",
+      "target_role": "student"
+    }
   ]
 }

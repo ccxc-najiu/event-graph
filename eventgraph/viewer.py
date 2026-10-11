@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 from .document import graph_to_dict, loads_graph
 from .errors import ValidationError
-from .layout import layout_graph
+from .layout import layout_graph, spread_canopy
 
 WEB = Path(__file__).with_name("web")
 MAX_BYTES = 2 * 1024 * 1024
@@ -26,7 +26,7 @@ def scene_from_json(text: str) -> dict:
     graph = loads_graph(text)
     if len(graph.events) > 3000 or len(graph.connections) > 12000:
         raise ValidationError("当前查看器最多支持 3,000 个事件、12,000 条连接")
-    return {"graph": graph_to_dict(graph), "layout": layout_graph(graph, node_spacing=5.0).to_dict()}
+    return {"graph": graph_to_dict(graph), "layout": spread_canopy(layout_graph(graph, node_spacing=5.0)).to_dict()}
 
 
 def make_handler(initial_scene: dict, name: str = "事件图谱"):

@@ -5,13 +5,20 @@ from dataclasses import dataclass, replace
 from types import MappingProxyType
 from uuid import uuid4
 
-from .errors import MissingFlowUpdate, NotEnabled, ValidationError
+from .errors import MissingContentUpdate, NotEnabled, ValidationError
 from .flows import Flow, ids
 from .models import (
     Connection, Event, EventSchema, Execution, History, InputKind,
     Result, ResultRecord, check_id, check_time,
 )
 from .ordering import rank_events
+from .content import describe_content
+
+
+def _content_updates(content_updates, flow_updates):
+    if content_updates is not None and flow_updates is not None:
+        raise ValidationError("use content_updates or legacy flow_updates, not both")
+    return dict(content_updates if content_updates is not None else flow_updates or {})
 
 
 @dataclass(frozen=True)
@@ -27,7 +34,7 @@ class EventGraph:
     """An event-centred port graph, not a path that characters must traverse.
 
     Definition updates are all-or-nothing for graph-owned data. Single-threaded;
-    custom Flow methods must not mutate the graph or external state in validation.
+    custom event hooks must not mutate the graph or external state in validation.
     """
 
     def __init__(self) -> None:
@@ -69,13 +76,15 @@ class EventGraph:
     def append(
         self, *, events: Iterable[Event] = (), results: Iterable[Result] = (),
         connections: Iterable[Connection] = (),
+        content_updates: Mapping[str, object] | None = None,
         flow_updates: Mapping[str, Flow] | None = None,
     ) -> MutationReport:
-        """Add definitions/connections and explicitly update affected flows atomically.
+        """Add definitions/connections and explicitly update affected content atomically.
 
         Connections may reference existing results as well as newly added ones.
         Every existing event with a changed input/output interface needs an entry
-        in flow_updates, even when intentionally reusing its previous Flow.
+        in content_updates, even when intentionally reusing its previous content.
+        flow_updates is a compatibility alias; do not supply both arguments.
         """
         next_events = dict(self._events)
         next_results = dict(self._results)
@@ -89,12 +98,13 @@ class EventGraph:
             next_results[result.id] = result
         return self._commit(
             next_events, next_results, self._connections + tuple(connections),
-            dict(flow_updates or {}), removed=frozenset(),
+            _content_updates(content_updates, flow_updates), removed=frozenset(),
         )
 
     def replace_result(
         self, old_result: str, new_result: Result, *,
         connections: Iterable[Connection] = (),
+        content_updates: Mapping[str, object] | None = None,
         flow_updates: Mapping[str, Flow] | None = None,
     ) -> MutationReport:
         """Retire one output port, remove its edges, and add a replacement port.
@@ -114,14 +124,14 @@ class EventGraph:
         remaining = tuple(c for c in self._connections if c.source_result != old_result)
         return self._commit(
             dict(self._events), next_results, remaining + tuple(connections),
-            dict(flow_updates or {}), removed=frozenset({old_result}),
+            _content_updates(content_updates, flow_updates), removed=frozenset({old_result}),
         )
 
     def _commit(self, events, results, connections, updates, *, removed) -> MutationReport:
         if not set(updates) <= set(events):
-            raise ValidationError(f"flow update references unknown events: {set(updates) - set(events)}")
-        for event_id, flow in updates.items():
-            events[event_id] = replace(events[event_id], flow=flow)
+            raise ValidationError(f"content update references unknown events: {set(updates) - set(events)}")
+        for event_id, content in updates.items():
+            events[event_id] = replace(events[event_id], content=content)
         outputs: dict[str, set[str]] = {key: set() for key in events}
         for result in results.values():
             if result.event_id not in events:
@@ -163,14 +173,15 @@ class EventGraph:
                 changed.add(event_id)
         missing = changed - set(updates)
         if missing:
-            raise MissingFlowUpdate(f"explicit flow updates required for: {sorted(missing)}")
+            raise MissingContentUpdate(f"explicit content updates required for: {sorted(missing)}")
         rank_events(events, (
             (results[c.source_result].event_id, c.target_event)
             for c in connections if c.kind is InputKind.TRIGGER
         ))
         for event_id, event in events.items():
             schema = schemas[event_id]
-            event.flow.validate(schema.related_items, schema.outputs)
+            describe_content(event.content)
+            event.validate_content(schema.related_items, schema.outputs)
         report = MutationReport(
             revision=self._revision + 1,
             added_events=frozenset(set(events) - set(self._events)),
@@ -236,9 +247,9 @@ class EventGraph:
             raise ValidationError(f"duplicate execution ID: {chosen_id}")
         if history.executions and time < history.executions[-1].time:
             raise ValidationError("history time cannot move backwards")
-        output = ids(self._events[event_id].flow.resolve(inputs), "runtime outputs")
+        output = ids(self._events[event_id].resolve(inputs), "runtime outputs")
         if not output <= self.schema(event_id).outputs:
-            raise ValidationError(f"flow returned undeclared outputs: {output}")
+            raise ValidationError(f"event returned undeclared outputs: {output}")
         records = tuple(
             ResultRecord(
                 definition=self._results[result_id],

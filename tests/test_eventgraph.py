@@ -1,7 +1,7 @@
 import unittest
 
 from eventgraph import (
-    Connection, Event, EventGraph, Flow, History, InputKind, MissingFlowUpdate,
+    Connection, FlowEvent, EventGraph, Flow, History, InputKind, MissingFlowUpdate,
     NotEnabled, Result, TableFlow, TimeWindow, UndefinedInput, ValidationError,
 )
 
@@ -14,9 +14,9 @@ def school_graph():
     graph = EventGraph()
     graph.append(
         events=[
-            Event("admission", ("first", "second", "examiner"), constant("pass", "fail", "examined")),
-            Event("final", ("student",), constant("high")),
-            Event("job", ("applicant",), TableFlow({frozenset({"high"}): {"hired"}}, default={"rejected"})),
+            FlowEvent("admission", ("first", "second", "examiner"), constant("pass", "fail", "examined")),
+            FlowEvent("final", ("student",), constant("high")),
+            FlowEvent("job", ("applicant",), TableFlow({frozenset({"high"}): {"hired"}}, default={"rejected"})),
         ],
         results=[
             Result("pass", "admission", ("first",)),
@@ -83,7 +83,7 @@ class GraphTests(unittest.TestCase):
 
     def test_append_event_with_old_result_as_trigger(self):
         self.graph.append(
-            events=[Event("retry", ("student",), constant("retried"))],
+            events=[FlowEvent("retry", ("student",), constant("retried"))],
             results=[Result("retried", "retry", ("student",))],
             connections=[Connection("fail", "retry", InputKind.TRIGGER, "student")],
         )
@@ -94,10 +94,10 @@ class GraphTests(unittest.TestCase):
         untouched = self.graph.events["admission"]
         flow = TableFlow({frozenset({"experience"}): {"hired"}, frozenset({"high"}): {"hired"}, frozenset({"high", "experience"}): {"hired"}}, default={"rejected"})
         report = self.graph.append(
-            events=[Event("work", ("worker",), constant("experience"))],
+            events=[FlowEvent("work", ("worker",), constant("experience"))],
             results=[Result("experience", "work", ("worker",))],
             connections=[Connection("experience", "job", InputKind.RELATED, "applicant")],
-            flow_updates={"job": flow},
+            content_updates={"job": flow},
         )
         self.assertEqual(report.updated_events, frozenset({"job"}))
         self.assertIs(self.graph.events["admission"], untouched)
@@ -110,7 +110,7 @@ class GraphTests(unittest.TestCase):
         before = self.snapshot()
         with self.assertRaises(MissingFlowUpdate):
             self.graph.append(
-                events=[Event("work", (), constant("experience"))],
+                events=[FlowEvent("work", (), constant("experience"))],
                 results=[Result("experience", "work")],
                 connections=[Connection("experience", "job", InputKind.RELATED)],
             )
@@ -125,7 +125,7 @@ class GraphTests(unittest.TestCase):
     def test_explicitly_reusing_flow_acknowledges_new_trigger(self):
         report = self.graph.append(
             connections=[Connection("pass", "job", InputKind.TRIGGER, "applicant")],
-            flow_updates={"job": self.graph.events["job"].flow},
+            content_updates={"job": self.graph.events["job"].content},
         )
         self.assertEqual(report.updated_events, frozenset({"job"}))
         self.assertFalse(self.graph.is_enabled("job", self.history, participants={"applicant": "alice"}, time=1, location="office"))
@@ -136,7 +136,7 @@ class GraphTests(unittest.TestCase):
         report = self.graph.replace_result(
             "high", Result("excellent", "final", ("student",)),
             connections=[Connection("excellent", "job", InputKind.RELATED, "applicant")],
-            flow_updates={
+            content_updates={
                 "final": constant("excellent"),
                 "job": TableFlow({frozenset({"excellent"}): {"hired"}}, default={"rejected"}),
             },
@@ -151,38 +151,38 @@ class GraphTests(unittest.TestCase):
     def test_replacement_without_target_update_is_atomic(self):
         before = self.snapshot()
         with self.assertRaises(MissingFlowUpdate):
-            self.graph.replace_result("high", Result("excellent", "final", ("student",)), flow_updates={"final": constant("excellent")})
+            self.graph.replace_result("high", Result("excellent", "final", ("student",)), content_updates={"final": constant("excellent")})
         self.assertEqual(self.snapshot(), before)
 
     def test_retired_result_ids_cannot_be_reused(self):
         self.graph.replace_result(
             "high", Result("excellent", "final", ("student",)),
-            flow_updates={"final": constant("excellent"), "job": constant("rejected")},
+            content_updates={"final": constant("excellent"), "job": constant("rejected")},
         )
         with self.assertRaises(ValidationError):
-            self.graph.append(results=[Result("high", "final", ("student",))], flow_updates={"final": constant("excellent")})
+            self.graph.append(results=[Result("high", "final", ("student",))], content_updates={"final": constant("excellent")})
 
     def test_dangling_and_overlapping_connections_are_rejected(self):
         for connection in [Connection("missing", "job", InputKind.RELATED), Connection("high", "job", InputKind.TRIGGER)]:
             before = self.snapshot()
             with self.assertRaises(ValidationError):
-                self.graph.append(connections=[connection], flow_updates={"job": constant("hired")})
+                self.graph.append(connections=[connection], content_updates={"job": constant("hired")})
             self.assertEqual(self.snapshot(), before)
 
     def test_invalid_output_update_rolls_back(self):
         before = self.snapshot()
         with self.assertRaises(ValidationError):
-            self.graph.append(flow_updates={"job": constant("not-declared")})
+            self.graph.append(content_updates={"job": constant("not-declared")})
         self.assertEqual(self.snapshot(), before)
 
     def test_expanded_related_domain_requires_coverage(self):
         old_table = TableFlow({frozenset(): {"rejected"}, frozenset({"high"}): {"hired"}})
-        self.graph.append(flow_updates={"job": old_table})
+        self.graph.append(content_updates={"job": old_table})
         before = self.snapshot()
         with self.assertRaises(ValidationError):
             self.graph.append(
                 connections=[Connection("fail", "job", InputKind.RELATED, "applicant")],
-                flow_updates={"job": old_table},
+                content_updates={"job": old_table},
             )
         self.assertEqual(self.snapshot(), before)
 
@@ -202,7 +202,7 @@ class GraphTests(unittest.TestCase):
 
     def test_unknown_roles_and_wrong_bindings_fail(self):
         with self.assertRaises(ValidationError):
-            self.graph.append(results=[Result("extra", "admission", ("unknown",))], flow_updates={"admission": constant("extra")})
+            self.graph.append(results=[Result("extra", "admission", ("unknown",))], content_updates={"admission": constant("extra")})
         with self.assertRaises(ValidationError):
             self.graph.execute("job", self.history, participants={"wrong": "bob"}, time=1, location="office")
 
@@ -219,8 +219,8 @@ class SemanticsTests(unittest.TestCase):
         graph = EventGraph()
         graph.append(
             events=[
-                Event("quake", (), constant("damaged"), TimeWindow(3, 3), frozenset({"city"})),
-                Event("repair", ("worker",), constant("repaired")),
+                FlowEvent("quake", (), constant("damaged"), TimeWindow(3, 3), frozenset({"city"})),
+                FlowEvent("repair", ("worker",), constant("repaired")),
             ],
             results=[Result("damaged", "quake"), Result("repaired", "repair", ("worker",))],
             connections=[Connection("damaged", "repair", InputKind.TRIGGER)],
@@ -234,7 +234,7 @@ class SemanticsTests(unittest.TestCase):
     def test_independent_event_order_yields_same_consumer_inputs(self):
         graph = EventGraph()
         graph.append(
-            events=[Event("a", ("person",), constant("ra")), Event("b", ("person",), constant("rb")), Event("c", ("person",), constant("rc"))],
+            events=[FlowEvent("a", ("person",), constant("ra")), FlowEvent("b", ("person",), constant("rb")), FlowEvent("c", ("person",), constant("rc"))],
             results=[Result("ra", "a", ("person",)), Result("rb", "b", ("person",)), Result("rc", "c", ("person",))],
             connections=[Connection("ra", "c", InputKind.RELATED), Connection("rb", "c", InputKind.RELATED)],
         )
@@ -252,7 +252,7 @@ class SemanticsTests(unittest.TestCase):
             def resolve(self, inputs):
                 return frozenset({"illegal"})
         graph = EventGraph()
-        graph.append(events=[Event("bad", (), BadFlow())])
+        graph.append(events=[FlowEvent("bad", (), BadFlow())])
         history = History()
         with self.assertRaises(ValidationError):
             graph.execute("bad", history, participants={}, time=0, location="any")
@@ -261,7 +261,7 @@ class SemanticsTests(unittest.TestCase):
     def test_explicit_domain_violation_has_no_history_side_effect(self):
         graph = EventGraph()
         graph.append(
-            events=[Event("a", (), constant("ra")), Event("b", (), TableFlow({frozenset(): {"rb"}}, input_domain=[set()]))],
+            events=[FlowEvent("a", (), constant("ra")), FlowEvent("b", (), TableFlow({frozenset(): {"rb"}}, input_domain=[set()]))],
             results=[Result("ra", "a"), Result("rb", "b")],
             connections=[Connection("ra", "b", InputKind.RELATED)],
         )
@@ -281,7 +281,7 @@ class SemanticsTests(unittest.TestCase):
         flow = TableFlow(cases)
         cases[frozenset()].add("unexpected")
         graph = EventGraph()
-        graph.append(events=[Event("empty", ("person",), flow)])
+        graph.append(events=[FlowEvent("empty", ("person",), flow)])
         history = History()
         graph.execute("empty", history, participants={"person": "alice"}, time=0, location="any")
         self.assertEqual(history.for_actor("alice"), ())

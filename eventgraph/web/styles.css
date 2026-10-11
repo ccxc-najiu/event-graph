@@ -354,8 +354,8 @@ a {
   border-top:1px solid #329cff;
 }
 .line.related {
-  border-top:2px dotted #67c8df;
-  opacity:.6;
+  border-top:2px solid #70bcc5;
+  opacity:.85;
 }
 .line.trigger {
   border-top-width:3px;
@@ -991,4 +991,17 @@ textarea {
     transition:none!important;
     scroll-behavior:auto!important;
   }
+}
+
+.view-settings {top:60px;}
+.form-switch {
+  position:absolute;right:22px;top:18px;z-index:2;display:flex;gap:3px;
+  padding:3px;border:1px solid #29405c;border-radius:8px;background:#08111edb;
+}
+.form-switch button {border:0;border-radius:5px;background:transparent;color:#7692ae;padding:6px 11px;font-size:11px;cursor:pointer;}
+.form-switch button[aria-pressed="true"] {background:#183454;color:#c5edff;}
+@media(max-width:600px) {
+  .view-settings {top:112px;}
+  .form-switch {top:25px;right:15px;}
+  .form-switch button {padding:6px 8px;font-size:10px;}
 }

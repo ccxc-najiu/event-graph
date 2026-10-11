@@ -35,11 +35,11 @@ normalized_json = dumps_graph(graph)
 
 ## 事件 JSON 格式
 
-第一版使用与基础类对应的结构，避免同时维护嵌套和扁平两套引用规则：
+当前导出 version 2，节点内容使用 `content`；仍可导入 version 1 的 `flow` 文件。结构示例：
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "events": [
     {
       "id": "study",
@@ -47,9 +47,11 @@ normalized_json = dumps_graph(graph)
       "roles": ["student"],
       "locations": ["school"],
       "time": {"start": 0, "end": 10},
-      "flow": {"type": "table", "default": ["knowledge"]}
+      "type": "flow",
+      "content": {"description": "通过学习获得知识。", "type": "table", "default": ["knowledge"]}
     },
-    {"id": "practice", "roles": ["student"], "time": {"start": 5, "end": 15}}
+    {"id": "practice", "roles": ["student"], "time": {"start": 5, "end": 15},
+     "content": {"description": "通过实践积累经验。", "data": {"topic": "练习"}}}
   ],
   "results": [
     {"id": "knowledge", "event_id": "study", "recipient_roles": ["student"]},
@@ -64,20 +66,26 @@ normalized_json = dumps_graph(graph)
 
 | 对象 | 必需字段 | 可选字段与默认值 |
 | --- | --- | --- |
-| 文档 | `version: 1`、`events` | `results: []`、`connections: []` |
-| 事件 | `id` | `description: ""`、`roles: []`、`locations: []`、`time: {}`、`flow` |
+| 文档 | `version: 2`、`events` | `results: []`、`connections: []` |
+| 事件 | `id`、`content` | `description: ""`、`roles: []`、`locations: []`、`time: {}`、`type: "event"` |
+| 通用内容 | 非空单行 `description` | `data: null`，可包含任意 JSON 原生数据 |
 | 时间窗口 | 无 | `start`、`end` 缺省或 `null` 表示无界 |
 | 结果 | `id`、`event_id` | `description: ""`、`recipient_roles: []` 表示世界级结果 |
 | 连接 | `source_result`、`target_event`、`kind` | `target_role: null` |
 
 角色、地点、收件角色均为不重复字符串数组；ID 必须为非空字符串。时间必须为有限数字，窗口包含两端，不表示事件持续时间。字段名采用现有 API 的命名，未知字段视为错误，避免拼写错误被静默忽略。
 
-省略 `flow` 时使用 `UnconfiguredFlow`：可以分析和排位，但执行会抛出 `UndefinedInput`，不会替用户决定输出。JSON 中只支持 `TableFlow`，不加载或执行 Python 代码；现有自定义 Python `Flow` 仍可直接用于图和布局，但不能通过该格式导出。
+`type: "event"` 对应基础 `Event`，其内容解析为 `NodeContent(description, data)`；内容只参与展示，直接执行抛出 `UndefinedInput`。`type: "flow"` 对应 `FlowEvent`，内容包含同样的 `description`，以及 `type: "table"` 的组合规则或 `type: "unconfigured"` 的未配置流程。渲染无需区分这些类型，内容摘要的统一接口都是 `content.description`。当前悬停提示保持只显示节点名称，未增加内容描述展示。
+
+旧版 version 1 中的 `flow` 会导入为 `FlowEvent.content`；省略流程的事件导入为基础 `Event`，自动补充“尚未配置节点内容。”摘要。重新导出统一为 version 2。version 2 必须显式提供 `content.description`，不接受旧 `flow` 字段。
+
+Python 内容可以是任何提供 `description` 属性的对象，但内置 JSON 编解码只支持准确类型为 `Event + NodeContent` 和 `FlowEvent + TableFlow/UnconfiguredFlow` 的组合。自定义派生类型或非 JSON 数据必须由应用实现专用编解码，内置导出会明确报错，不静默丢失数据或行为；JSON 不动态加载 Python 类。
 
 组合规则格式：
 
 ```json
 {
+  "description": "根据已有知识决定本次实践的结果。",
   "type": "table",
   "cases": [
     {"inputs": ["knowledge"], "outputs": ["experience"]}
@@ -134,6 +142,8 @@ updated_layout = layout_graph(updated_graph, previous=layout)
 节点间距相同时，已有节点保持 XZ 位置，新节点寻找空位。若新约束改变层级，Y 必须更新；多个旧节点移入同层占据同一位置时，保留层级未改变的节点，其他节点就近重新安放。删除的节点不进入新输出。调整节点间距时应省略 `previous` 重新布局。
 
 保留旧布局与无重叠优先于进一步压缩连线。此处是利用旧位置的稳定更新，不是完整的增量关系解析；解析和先后层级仍重新计算。
+
+查看器另调用 `spread_canopy(layout, related_proximity=True)` 展开树冠，并默认优化关联邻近关系。其局部调整以缩短去重关联节点对的三维距离为目标，同时保留触发枝方向和树冠展开程度；每次接受移动都不增加关联总距离。Y 和 rank 固定，六角席位保证最小间距。`related_proximity=False` 可用于对照未优化的树冠；该参数位于 `eventgraph.layout`，不影响通用 `layout_graph` 的默认行为。
 
 布局输出是只读快照，提供 `nodes` 与 `links`，通过事件 ID、结果 ID 和原始 JSON 对应。线条样式、结果端口形状、路径绕行、摄像机与交互属于后续渲染阶段。
 

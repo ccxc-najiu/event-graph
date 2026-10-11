@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from .errors import UndefinedInput, ValidationError
+from .content import check_description
 
 
 def ids(values: Iterable[str], label: str) -> frozenset[str]:
@@ -26,6 +27,8 @@ class Flow(ABC):
     arbitrary side effects in caller-supplied Python objects.
     """
 
+    description: str = "根据关联结果决定本次事件的输出。"
+
     def validate(
         self, related_ids: frozenset[str], output_ids: frozenset[str]
     ) -> None:
@@ -38,6 +41,9 @@ class Flow(ABC):
 
 class UnconfiguredFlow(Flow):
     """An editable definition without execution rules; never invent an outcome."""
+
+    def __init__(self, description: str = "尚未配置事件的执行规则。") -> None:
+        self.description = check_description(description)
 
     def resolve(self, inputs: frozenset[str]) -> frozenset[str]:
         raise UndefinedInput("event flow has not been configured")
@@ -55,6 +61,7 @@ class TableFlow(Flow):
     cases: Mapping[frozenset[str], frozenset[str]]
     default: frozenset[str] | None
     input_domain: frozenset[frozenset[str]] | None
+    description: str
 
     def __init__(
         self,
@@ -62,7 +69,9 @@ class TableFlow(Flow):
         *,
         default: Iterable[str] | None = None,
         input_domain: Iterable[Iterable[str]] | None = None,
+        description: str = "根据关联结果查表，确定本次事件的输出。",
     ) -> None:
+        object.__setattr__(self, "description", check_description(description))
         normalized = {
             ids(key, "case inputs"): ids(value, "case outputs")
             for key, value in (cases or {}).items()

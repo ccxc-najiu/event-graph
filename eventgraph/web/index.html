@@ -22,19 +22,20 @@
       <div class="sidebar-foot"><span class="status-dot"></span>本地工作空间<span class="local-note">JSON 驱动</span></div>
     </aside>
     <main class="viewport" aria-label="三维事件图">
-      <div class="view-heading"><div class="eyebrow">RELATIONSHIP MAP</div><h1>事件图谱</h1><p>先后关系 · 结果连接</p></div>
-      <div class="view-settings"><label><input id="related" type="checkbox">相关项</label><label><input id="labels" type="checkbox" checked>名称</label><label><input id="glow" type="checkbox" checked>辉光</label></div>
+      <div class="view-heading"><div class="eyebrow">EVENT TREE</div><h1>事件图谱</h1><p>主干生枝 · 事件相连</p></div>
+      <div class="form-switch" role="group" aria-label="渲染形态"><button id="form-simple" aria-pressed="true">简约形态</button><button id="form-natural" aria-pressed="false">拟态</button></div>
+      <div class="view-settings"><label><input id="related" type="checkbox" checked>相关项</label><label><input id="labels" type="checkbox" checked>悬停名称</label><label><input id="glow" type="checkbox" checked>辉光</label></div>
       <canvas id="graph" tabindex="0" aria-label="三维事件图。拖动旋转，滚轮缩放，Shift 拖动平移。也可用方向键旋转、加减键缩放、Home 复位。通过左侧事件列表查看节点详情。"></canvas>
       <div id="canvas-message" class="canvas-message" role="status">正在载入图谱…</div>
       <div class="view-bottom">
-        <div class="legend"><span><i class="line trigger"></i>因果枝桠</span><span><i class="line related"></i>关联粒子</span></div>
+        <div class="legend"><span><i class="line trigger"></i>触发实枝</span><span><i class="line related"></i>关联藤蔓</span></div>
         <div class="camera-controls" aria-label="相机控制"><button id="rotate" aria-pressed="false">↻ <span>环绕</span></button><button id="front">正视</button><button id="reset">复位</button><span class="divider"></span><button id="zoom-out" aria-label="缩小">−</button><output id="zoom" aria-label="缩放比例">100%</output><button id="zoom-in" aria-label="放大">＋</button></div>
         <div class="gesture-hint">拖动旋转 · 滚轮缩放</div>
       </div>
     </main>
     <aside class="inspector" aria-label="事件详情">
       <div class="section-heading"><h2>节点详情</h2><button id="clear-selection" class="icon-button" aria-label="取消选择" hidden>×</button></div>
-      <div id="detail-empty" class="detail-empty"><div class="empty-orbit" aria-hidden="true"><span></span></div><h3>探索连接的可能</h3><p>选择一个节点，查看它的时间窗口、结果与关联事件。</p><dl class="scene-facts"><div><dt>事件</dt><dd id="fact-events">—</dd></div><div><dt>触发连接</dt><dd id="fact-triggers">—</dd></div><div><dt>相关连接</dt><dd id="fact-related">—</dd></div></dl><p class="quiet-note">高度表示先后层级<br>不代表实际发生时间</p></div>
+      <div id="detail-empty" class="detail-empty"><div class="empty-orbit" aria-hidden="true"><span></span></div><h3>探索连接的可能</h3><p>选择一个节点，查看它的时间窗口、结果与关联事件。</p><dl class="scene-facts"><div><dt>事件</dt><dd id="fact-events">—</dd></div><div><dt>触发连接</dt><dd id="fact-triggers">—</dd></div><div><dt>相关连接</dt><dd id="fact-related">—</dd></div></dl><p class="quiet-note">无触发前置的事件从主干延伸<br>其余事件从触发节点延伸</p></div>
       <div id="detail" hidden><div class="eyebrow detail-eyebrow" id="detail-rank"></div><h3 id="detail-name"></h3><p id="detail-id" class="mono"></p><section><h4>允许发生的时间窗口</h4><div id="detail-time" class="time-window"></div></section><section><h4>参与角色</h4><div id="detail-roles" class="tags"></div></section><section><h4>产出结果 <span id="result-count" class="count"></span></h4><div id="detail-results"></div></section><section><h4>输入来源</h4><div id="detail-incoming"></div></section><section><h4>影响去向</h4><div id="detail-outgoing"></div></section></div>
       <div class="inspector-foot"><span class="status-dot"></span>选择节点后聚焦直接关联</div>
     </aside>

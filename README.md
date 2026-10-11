@@ -32,11 +32,15 @@ python3 -m unittest discover -s tests -v
 python3 -m eventgraph.viewer examples/branching.json --port 8765
 ```
 
-在浏览器打开 `http://127.0.0.1:8765`。黑底电蓝线束与青色节点，支持旋转、缩放、节点聚焦、JSON 导入及布局导出；全部资源在本地，不依赖 CDN。终端按 Ctrl+C 停止服务。导入仅替换浏览器当前视图，不写回原文件。
+在浏览器打开 `http://127.0.0.1:8765`。支持“简约形态 / 拟态”切换：简约使用电蓝实枝与清晰的关联藤蔓，拟态呈现电蓝发光树冠、渐细枝条和树干纹理。支持旋转、缩放、节点聚焦、JSON 导入及布局导出；全部资源在本地，不依赖 CDN。终端按 Ctrl+C 停止服务。导入仅替换浏览器当前视图，不写回原文件。
 
-![三维查看器](docs/concepts/viewer-preview.png)
+![简约形态](docs/concepts/viewer-preview.png)
+
+![拟态](docs/concepts/viewer-natural-preview.png)
 
 ## 事件的七项属性
+
+节点内容使用 `content: object`，必须提供一句 `description` 供渲染展示。内容的其他结构由派生类决定，渲染不解析；通用内容可使用 `NodeContent`，保留流程执行的节点使用 `FlowEvent`。原 `Event.flow` 已改为 `Event.content`，详细迁移与扩展示例见 [API 说明](docs/api.md)。
 
 | 属性 | 存放位置 | 含义 |
 | --- | --- | --- |
@@ -45,7 +49,7 @@ python3 -m eventgraph.viewer examples/branching.json --port 8765
 | 参与角色 | `Event.roles` | 角色槽位，执行时绑定具体人物 |
 | 触发条件 | `graph.schema(id).trigger_conditions` | 必须全部存在的历史结果 |
 | 相关项 | `graph.schema(id).related_items` | 内部流程会读取的可选历史结果 |
-| 内部流程 | `Event.flow` | 输入结果组合到本次联合输出的映射 |
+| 节点内容 | `Event.content` | `object`，必须提供一句 `description`；具体含义由派生类定义 |
 | 输出 | `graph.schema(id).outputs` | 该事件可能产生的结果集合 |
 
 触发条件、相关项和输出直接从图中派生，只有一份事实来源，不另存容易失配的副本。触发条件与相关项不相交，但两者对应的结果可以同时存在于人物经历中。
@@ -72,14 +76,14 @@ python3 -m eventgraph.viewer examples/branching.json --port 8765
 
 ```python
 from eventgraph import (
-    Connection, Event, EventGraph, History, InputKind, Result, TableFlow,
+    Connection, FlowEvent, EventGraph, History, InputKind, Result, TableFlow,
 )
 
 graph = EventGraph()
 graph.append(
     events=[
-        Event("admission", ("candidate",), TableFlow(default={"admitted"})),
-        Event("final", ("student",), TableFlow(default={"high_score"})),
+        FlowEvent("admission", ("candidate",), TableFlow(default={"admitted"})),
+        FlowEvent("final", ("student",), TableFlow(default={"high_score"})),
     ],
     results=[
         Result("admitted", "admission", ("candidate",)),
@@ -113,13 +117,13 @@ assert {r.result_id for r in history.for_actor("alice")} == {
 ```python
 report = graph.append(
     events=[
-        Event("practice", ("learner",), TableFlow(default={"practiced"})),
+        FlowEvent("practice", ("learner",), TableFlow(default={"practiced"})),
     ],
     results=[Result("practiced", "practice", ("learner",))],
     connections=[
         Connection("practiced", "final", InputKind.RELATED, "student"),
     ],
-    flow_updates={
+    content_updates={
         "final": TableFlow(
             {frozenset({"practiced"}): {"high_score"}},
             default=set(),  # 示例：未练习时本次执行不产生任何结果
@@ -129,7 +133,7 @@ report = graph.append(
 assert report.updated_events == frozenset({"final"})
 ```
 
-当已有事件的输入连接或输出集合改变时，必须明确提交对应的 `flow_updates`。即使原有默认分支足够处理变化，也应显式传入原流程，表示已经确认行为。新增事件的流程通过 `Event.flow` 提供。
+当已有事件的输入连接或输出集合改变时，必须明确提交对应的 `content_updates`。即使原有默认分支足够处理变化，也应显式传入原流程，表示已经确认行为。新增节点通过 `Event.content` 提供内容；流程节点使用 `FlowEvent`，其内容为 `Flow` 对象。
 
 检查失败会抛出异常，整批图更新不提交。库不能从一条新连接自动推断它应提高还是降低某个结果的概率，流程语义由调用者定义。
 
@@ -140,7 +144,7 @@ graph.replace_result(
     "high_score",
     Result("excellent_score", "final", ("student",)),
     connections=[],  # 新结果的出边在这里显式声明
-    flow_updates={"final": TableFlow(default={"excellent_score"})},
+    content_updates={"final": TableFlow(default={"excellent_score"})},
 )
 ```
 

@@ -6,7 +6,8 @@ from math import isfinite
 from types import MappingProxyType
 from collections.abc import Mapping
 
-from .errors import ValidationError
+from .errors import UndefinedInput, ValidationError
+from .content import describe_content
 from .flows import Flow, ids
 
 
@@ -43,17 +44,22 @@ class TimeWindow:
 
 @dataclass(frozen=True)
 class Event:
-    """Predefined event module. Its three result sets are derived from the graph."""
+    """Node definition with opaque content interpreted by derived event classes.
+
+    Content is not deep-frozen. Treat it as immutable after insertion; validation
+    hooks must not mutate it or external state, so graph updates stay atomic.
+    """
 
     id: str
     roles: tuple[str, ...]
-    flow: Flow
+    content: object
     time: TimeWindow = field(default_factory=TimeWindow)
     locations: frozenset[str] = field(default_factory=frozenset)
     description: str = ""
 
     def __post_init__(self) -> None:
         check_id(self.id, "event ID")
+        describe_content(self.content)
         if isinstance(self.roles, str):
             raise ValidationError("roles must be a collection")
         roles = tuple(self.roles)
@@ -61,10 +67,31 @@ class Event:
             raise ValidationError("role names must be unique")
         object.__setattr__(self, "roles", roles)
         object.__setattr__(self, "locations", ids(self.locations, "locations"))
-        if not isinstance(self.flow, Flow):
-            raise ValidationError("event flow must implement Flow")
         if not isinstance(self.time, TimeWindow):
             raise ValidationError("event time must be a TimeWindow")
+
+    def validate_content(self, related_ids: frozenset[str], output_ids: frozenset[str]) -> None:
+        """Derived classes validate content against the candidate event interface."""
+
+    def resolve(self, inputs: frozenset[str]) -> frozenset[str]:
+        """Derived classes interpret content and return declared result IDs."""
+        raise UndefinedInput(f"event {self.id}: content has no execution behavior")
+
+
+@dataclass(frozen=True)
+class FlowEvent(Event):
+    """Executable event whose content is a Flow implementation."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if not isinstance(self.content, Flow):
+            raise ValidationError("FlowEvent content must implement Flow")
+
+    def validate_content(self, related_ids: frozenset[str], output_ids: frozenset[str]) -> None:
+        self.content.validate(related_ids, output_ids)
+
+    def resolve(self, inputs: frozenset[str]) -> frozenset[str]:
+        return self.content.resolve(inputs)
 
 
 @dataclass(frozen=True)
